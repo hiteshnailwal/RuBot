@@ -1,0 +1,15 @@
+Button {
+  background: #177bcc;
+  border-radius: 25;
+  height: 47;
+  line-height: 47;
+  text-transform: uppercase;
+}
+Label {
+  width: 90%;
+  margin: 5% auto;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 16px;
+  text-align: center;
+}
