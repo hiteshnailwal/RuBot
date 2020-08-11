@@ -25,12 +25,15 @@ export class HomeComponent implements OnInit {
   }
 
   tap() {
-    this.msgToSpeak = 'Hamein Rs. 411 Rupye Prapt Hue. Dhanyawad!'
-    this.playAudio().then(() => {
-      this.startReading().then(() => {
-        this.hideText();
-      });
-    });
+    // this.msgToSpeak = 'Hamein Rs. 411 Rupye Prapt Hue. Dhanyawad!'
+    // this.playAudio().then(() => {
+    //   this.startReading().then(() => {
+    //     this.hideText();
+    //   });
+    // });
+    /////////////////////////
+    const str = 'Paid Rs.128 to MANGALAM GENERAL STORE from Paytm Balance. Updated Balance: Paytm Wallet- Rs 7158.16. More Details: https://paytm.me/u-wPrAt';
+    this.filterMessage(str);
   }
 
   ngOnInit(): void {
@@ -46,35 +49,41 @@ export class HomeComponent implements OnInit {
     const smsReceiveIntent = android.provider.Telephony.Sms.Intents.SMS_RECEIVED_ACTION;
     application.android.registerBroadcastReceiver(smsReceiveIntent,
       (context: android.content.Context, intent: android.content.Intent) => { 
+      /** native android way to get the actual message and address */
       let messages: Object[];            
       messages = <any>intent.getSerializableExtra("pdus");
       const format: string = intent.getStringExtra("format");
       for (let i = 0; i < messages.length; i++) {
         const message = android.telephony.SmsMessage.createFromPdu(messages[i], format);
         const msgFrom = message.getDisplayOriginatingAddress();
-        let rawMsg = message.getMessageBody();
-        rawMsg = rawMsg.toLowerCase();
-        // first condition implemented
-        if (rawMsg.search(APP_CONSTANTS.FILTER_WORD_1) !== -1 ||
-        rawMsg.search(APP_CONSTANTS.FILTER_WORD_2) !== -1 || 
-        rawMsg.search(APP_CONSTANTS.FILTER_WORD_3) !== -1) {
-          let amount: string;
-          // second condition implemented for rs
-          if (rawMsg.search(APP_CONSTANTS.RS_TXT) !== -1) {
-            amount = this.filterAmount(rawMsg, APP_CONSTANTS.RS_TXT);
-            // second condition implemented for INR
-          } else if (rawMsg.search(APP_CONSTANTS.INR_TXT) !== -1) {
-            amount = this.filterAmount(rawMsg, APP_CONSTANTS.INR_TXT);
-          }
-          this.msgToSpeak = APP_CONSTANTS.MSG_SPEAK_1 +''+ amount +''+ APP_CONSTANTS.MSG_SPEAK_2;
-          this.playAudio().then(() => {
-            this.startReading().then(() => {
-              this.hideText();
-            });
-          });
-        }
+        const rawMsg = message.getMessageBody();
+        this.filterMessage(rawMsg);
       }
     });
+  }
+
+  filterMessage(rawMsg: string) {
+    rawMsg = rawMsg.toLowerCase();
+    // first condition implemented
+    if (rawMsg.search(APP_CONSTANTS.FILTER_WORD_1) !== -1 ||
+    rawMsg.search(APP_CONSTANTS.FILTER_WORD_2) !== -1 || 
+    rawMsg.search(APP_CONSTANTS.FILTER_WORD_3) !== -1 ||
+    rawMsg.search(APP_CONSTANTS.FILTER_WORD_4) !== -1) {
+      let amount: string;
+      // second condition implemented for rs
+      if (rawMsg.match(APP_CONSTANTS.RS_TXT) !== null) {
+        amount = this.filterAmount(rawMsg, APP_CONSTANTS.RS_TXT);
+        // second condition implemented for INR
+      } else if (rawMsg.match(APP_CONSTANTS.INR_TXT) !== null) {
+        amount = this.filterAmount(rawMsg, APP_CONSTANTS.INR_TXT);
+      }
+      this.msgToSpeak = APP_CONSTANTS.MSG_SPEAK_1 +''+ amount +''+ APP_CONSTANTS.MSG_SPEAK_2;
+      this.playAudio().then(() => {
+        this.startReading().then(() => {
+          this.hideText();
+        });
+      });
+    }
   }
 
   showAlert() {
@@ -85,13 +94,21 @@ export class HomeComponent implements OnInit {
     };
     dialogs.prompt(requestObj);
   }
-
+  
+  /**
+   * 
+   * @param str 
+   * @param constTxt 
+   */
   filterAmount(str: string, constTxt: string) {
     str = str.split(constTxt)[1];
-    str = str.split('.')[0];
+    str = str.match(/^\d+|\d+\b|\d+(?=\w)/g)[0];
     return str;
   }
 
+  /**
+   * this method start the ring audio.
+   */
   playAudio() {
     const playerOptions = {
       audioFile: '~/assets/speak-audio-ring.mp3',
@@ -104,6 +121,9 @@ export class HomeComponent implements OnInit {
     });
   }
 
+  /**
+   * this method start the modified message audio.
+   */
   startReading() {
     let speakOptions: SpeakOptions = {
       text: this.msgToSpeak, /// *** required ***
@@ -118,6 +138,9 @@ export class HomeComponent implements OnInit {
     });
   }
 
+  /**
+  * This method will simply trash the message to hide on ui.
+  */
   hideText() {
     const timer = setTimeout(() => {
       this.msgToSpeak = undefined;
