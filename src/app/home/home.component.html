@@ -3,6 +3,6 @@
 </ActionBar>
 
 <GridLayout class="page">
-    <Label textWrap="true" [text]="infoText"></Label>
-    <!-- <Label *ngIf="showMsgOnScreen" textWrap="true" [text]="msgToSpeak"></Label> -->
+    <Label *ngIf="msgToSpeak" textWrap="true" [text]="msgToSpeak"></Label>
+    <!-- <button text="tapMe" (tap)="tap()"></button> -->
 </GridLayout>

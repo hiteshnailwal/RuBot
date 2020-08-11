@@ -1,5 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { TNSTextToSpeech, SpeakOptions } from 'nativescript-texttospeech';
+import { TNSPlayer } from 'nativescript-audio';
 import * as application from 'tns-core-modules/application';
 import * as permissions from "nativescript-permissions";
 import * as dialogs from 'tns-core-modules/ui/dialogs';
@@ -15,13 +16,24 @@ let TTS = new TNSTextToSpeech();
 })
 export class HomeComponent implements OnInit {
   private smsReceivePermissionFlag: boolean;
-  public showMsgOnScreen: boolean;
-  public infoText: string;
+  private _player: TNSPlayer;
   public appName: string;
+  public msgToSpeak: string;
+
+  constructor() {
+    this._player = new TNSPlayer();
+  }
+
+  tap() {
+    this.msgToSpeak = 'Hamein Rs. 411 Rupye Prapt Hue. Dhanyawad!'
+    this.playAudio().then(() => {
+      this.startReading().then(() => {
+        this.hideText();
+      });
+    });
+  }
 
   ngOnInit(): void {
-    let msgToSpeak: string;
-    this.infoText = APP_CONSTANTS.INFO_TXT;
     this.appName = APP_CONSTANTS.APP_NAME;
     if (!this.smsReceivePermissionFlag) {
       permissions.requestPermissions([android.Manifest.permission.RECEIVE_SMS], APP_CONSTANTS.SMS_PERMISSION_TXT).then(() => {
@@ -54,17 +66,15 @@ export class HomeComponent implements OnInit {
           } else if (rawMsg.search(APP_CONSTANTS.INR_TXT) !== -1) {
             amount = this.filterAmount(rawMsg, APP_CONSTANTS.INR_TXT);
           }
-          msgToSpeak = APP_CONSTANTS.MSG_SPEAK_1 +''+ amount +''+ APP_CONSTANTS.MSG_SPEAK_2;
-          this.startReading(msgToSpeak);
+          this.msgToSpeak = APP_CONSTANTS.MSG_SPEAK_1 +''+ amount +''+ APP_CONSTANTS.MSG_SPEAK_2;
+          this.playAudio().then(() => {
+            this.startReading().then(() => {
+              this.hideText();
+            });
+          });
         }
       }
     });
-  }
-
-  filterAmount(str: string, constTxt: string) {
-    str = str.split(constTxt)[1];
-    str = str.split('.')[0];
-    return str;
   }
 
   showAlert() {
@@ -76,22 +86,43 @@ export class HomeComponent implements OnInit {
     dialogs.prompt(requestObj);
   }
 
-  startReading(msgToSpeak: string) {
-    this.showMsgOnScreen = true;
+  filterAmount(str: string, constTxt: string) {
+    str = str.split(constTxt)[1];
+    str = str.split('.')[0];
+    return str;
+  }
+
+  playAudio() {
+    const playerOptions = {
+      audioFile: '~/assets/speak-audio-ring.mp3',
+      loop: false,
+      completeCallback: function () {},
+    }
+    return new Promise((resolve, reject) => {
+      playerOptions.completeCallback = resolve;
+      this._player.playFromUrl(playerOptions);
+    });
+  }
+
+  startReading() {
     let speakOptions: SpeakOptions = {
-      text: msgToSpeak, /// *** required ***
+      text: this.msgToSpeak, /// *** required ***
       speakRate: 1.0, // optional - default is 1.0
       pitch: 1.0, // optional - default is 1.0
       volume: 1.0, // optional - default is 1.0
-      locale: APP_CONSTANTS.LOCALE_IND_HINDI, // optional - default is system locale,
-      finishedCallback: () => {
-        this.showMsgOnScreen = false;
-      } // optional
+      locale: APP_CONSTANTS.LOCALE_IND_HINDI // optional - default is system locale,
     };
-    TTS.speak(speakOptions).then(() => {
-      // console.log('everything is fine');
-    }, (err) => {
-      // console.log('oops, something went wrong!', err);
+    return new Promise((resolve, reject) => {
+      speakOptions.finishedCallback = resolve;
+      TTS.speak(speakOptions)
     });
   }
+
+  hideText() {
+    const timer = setTimeout(() => {
+      this.msgToSpeak = undefined;
+      clearTimeout(timer);
+    }, 1000);
+  }
+
 }
