@@ -13,6 +13,14 @@ export const APP_CONSTANTS = {
   FILTER_WORD_3: 'deposited',
   FILTER_WORD_4: 'paid',
   MSG_SPEAK_1: 'Hamein Rs: ',
-  MSG_SPEAK_2: ' Rupye Prapt Hue. Dhanyawad!'
+  MSG_SPEAK_2: ' Rupye Prapt Hue. Dhanyawad!',
+  MOCK_MSG1: 'Dear 10116604XXXX, your passbook balance against KDMAL0041505000502XXX is Rs. 5000/-. Contribution of Rs. 500/- for due month 062020 has been received.',
+  PAYTM_MOCK_MSG2: 'Paid Rs.55,627.1 to JioMart_BD from Paytm Balance. Updated Balance: Paytm Wallet- Rs 32.9. More Details: https://paytm.me/J-SuyXU',
+  CREDIT_MOCK_MSG3: 'ALERT: You have spent Rs.200.50  on CREDIT Card xx4179 at AMAZON on 2020-07-30:14:15:44.Avl bal - Rs.20000.50, curr o/s - Rs.3000.50.Not you? Call 18002586161',
+  UPI_MOCK_MSG4: 'Dear Customer, acct XXX002 is credited with Rs.301.00 on 07-Aug-20 from 7290982718@paytm. UPI Ref no 022035944267',
+  MOCK_MSG5: 'Count#44:Rs 420.00 paid to HEMA CHIBB by 99XXXX5047 at Jul 29, 2020 9:55 PM. OrderId 202007292155030045. For concerns, call:0120-4440440',
+  ICICI_BANK_MOCK_MSG6: 'Dear Customer, Your a/c no. XXXXXXXX6002 is credited by Rs.10,000.00 on 19-Jul-2020 11:24:51 by a/c linked to mobile XXXXX13281. (IMPS Ref no 020111366927).',
+  HDFC_BANK_MOCK_MSG7: 'UPDATE: INR 3,094.00 deposited in A/c XX9896 on 08-JUL-20 for 50200001850620-TPT.Avl bal:INR 11,284.04 subject to clearing',
+  MSG_BLOCK_CSS: '.contentArea .msgBody { width: 90%; margin: 5% auto; font-size: 22px; font-weight: 500; line-height: 16px; text-align: center; color: black; }'
 }
 

@@ -1,15 +1,48 @@
-Button {
-  background: #177bcc;
-  border-radius: 25;
-  height: 47;
-  line-height: 47;
-  text-transform: uppercase;
+.homeScreenContainer {
+  width: 100%;
+  height: 100%;
 }
-Label {
+.action-bar {
+  background: #177bcc;
+  color: #fff;
+  font-weight: 700;
+  font-size: 24px;
+}
+.contentArea {
+  width: 90%;
+  height: 30%;
+  background: #ddd;
+  color: #177bcc;
+  margin: 5%;
+  border-radius: 10;
+  box-shadow: #177bcc;
+}
+.contentArea .msgHeading {
+  width: 90%;
+  margin: 2% auto;
+  color: #177bcc;
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: underline;
+  text-shadow: #000000;
+}
+.contentArea .msgBody {
   width: 90%;
   margin: 5% auto;
   font-size: 22px;
   font-weight: 500;
   line-height: 16px;
   text-align: center;
+  color: black;
+}
+.contentArea Button {
+  width: 50%;
+  color: #fff;
+  margin: 0 auto;
+  background: #177bcc;
+  border-radius: 25;
+  height: 47;
+  line-height: 47;
+  text-transform: uppercase;
 }

@@ -5,6 +5,9 @@ import * as application from 'tns-core-modules/application';
 import * as permissions from "nativescript-permissions";
 import * as dialogs from 'tns-core-modules/ui/dialogs';
 import { APP_CONSTANTS } from '../app.constant';
+import { Page, EventData, Observable } from 'tns-core-modules/ui/page/page';
+import { Label } from "tns-core-modules/ui/label";
+import { StackLayout } from "tns-core-modules/ui/layouts/stack-layout";
 
 declare var android: any;
 let TTS = new TNSTextToSpeech();
@@ -19,25 +22,22 @@ export class HomeComponent implements OnInit {
   private _player: TNSPlayer;
   public appName: string;
   public msgToSpeak: string;
+  public flag: boolean;
 
-  constructor() {
+  constructor (
+    private page: Page,
+  ) {
     this._player = new TNSPlayer();
+    this.page.on('navigatingTo', this.onNavigatingTo.bind(this));
+    this.page.on('navigatedFrom', this.onNavigatedFrom.bind(this));
   }
 
-  tap() {
-    // this.msgToSpeak = 'Hamein Rs. 411 Rupye Prapt Hue. Dhanyawad!'
-    // this.playAudio().then(() => {
-    //   this.startReading().then(() => {
-    //     this.hideText();
-    //   });
-    // });
-    /////////////////////////
-    const str = 'Paid Rs.128 to MANGALAM GENERAL STORE from Paytm Balance. Updated Balance: Paytm Wallet- Rs 7158.16. More Details: https://paytm.me/u-wPrAt';
-    this.filterMessage(str);
-  }
-
-  ngOnInit(): void {
+  ngOnInit() {
     this.appName = APP_CONSTANTS.APP_NAME;
+    this.msgToSpeak = '';
+  }
+
+  onNavigatingTo(args: EventData) {
     if (!this.smsReceivePermissionFlag) {
       permissions.requestPermissions([android.Manifest.permission.RECEIVE_SMS], APP_CONSTANTS.SMS_PERMISSION_TXT).then(() => {
         this.smsReceivePermissionFlag = true;
@@ -57,33 +57,56 @@ export class HomeComponent implements OnInit {
         const message = android.telephony.SmsMessage.createFromPdu(messages[i], format);
         const msgFrom = message.getDisplayOriginatingAddress();
         const rawMsg = message.getMessageBody();
-        this.filterMessage(rawMsg);
+        this.filterMessage(rawMsg, args);
       }
     });
   }
 
-  filterMessage(rawMsg: string) {
+  filterMessage(rawMsg: string, args: EventData) {
     rawMsg = rawMsg.toLowerCase();
     // first condition implemented
     if (rawMsg.search(APP_CONSTANTS.FILTER_WORD_1) !== -1 ||
     rawMsg.search(APP_CONSTANTS.FILTER_WORD_2) !== -1 || 
     rawMsg.search(APP_CONSTANTS.FILTER_WORD_3) !== -1 ||
     rawMsg.search(APP_CONSTANTS.FILTER_WORD_4) !== -1) {
-      let amount: string;
       // second condition implemented for rs
       if (rawMsg.match(APP_CONSTANTS.RS_TXT) !== null) {
-        amount = this.filterAmount(rawMsg, APP_CONSTANTS.RS_TXT);
+        this.filterAmount(rawMsg, APP_CONSTANTS.RS_TXT).then((str) => {
+          this.goAhead(str, args);
+        });
         // second condition implemented for INR
       } else if (rawMsg.match(APP_CONSTANTS.INR_TXT) !== null) {
-        amount = this.filterAmount(rawMsg, APP_CONSTANTS.INR_TXT);
-      }
-      this.msgToSpeak = APP_CONSTANTS.MSG_SPEAK_1 +''+ amount +''+ APP_CONSTANTS.MSG_SPEAK_2;
-      this.playAudio().then(() => {
-        this.startReading().then(() => {
-          this.hideText();
+        this.filterAmount(rawMsg, APP_CONSTANTS.INR_TXT).then((str) => {
+          this.goAhead(str, args);
         });
-      });
+      }
     }
+  }
+
+  goAhead(str: string, args: EventData) {
+    /** add message label binding start */
+    const page = <Page>args.object;
+    const msgContent = <StackLayout>page.getViewById("content");
+    const vm = new Observable();
+    const msgLabel = new Label();
+    this.msgToSpeak = str;
+    msgLabel.text =  this.msgToSpeak;
+    msgLabel.textWrap = true;
+    msgLabel.className = 'msgBody';
+    const pageCSS = APP_CONSTANTS.MSG_BLOCK_CSS;
+    page.css = pageCSS;
+    msgContent.addChild(msgLabel);
+    page.bindingContext = vm;
+    /** add message label binding end */
+
+    /** calling audio player */
+    this.playAudio().then(() => {
+      this.startReading().then(() => {
+        /** removing message label binding */
+        msgContent.removeChild(msgLabel);
+        page.bindingContext = vm;
+      });
+    });
   }
 
   showAlert() {
@@ -100,10 +123,13 @@ export class HomeComponent implements OnInit {
    * @param str 
    * @param constTxt 
    */
-  filterAmount(str: string, constTxt: string) {
-    str = str.split(constTxt)[1];
-    str = str.match(/^\d+|\d+\b|\d+(?=\w)/g)[0];
-    return str;
+  filterAmount(str: string, constTxt: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      str = str.split(constTxt)[1].replace(/,/g, '');
+      str = str.match(/^\d+|\d+\b|\d+(?=\w)/g)[0];
+      const msg = APP_CONSTANTS.MSG_SPEAK_1 +''+ str +''+ APP_CONSTANTS.MSG_SPEAK_2;
+      resolve(msg);
+    });
   }
 
   /**
@@ -127,8 +153,8 @@ export class HomeComponent implements OnInit {
   startReading() {
     let speakOptions: SpeakOptions = {
       text: this.msgToSpeak, /// *** required ***
-      speakRate: 1.0, // optional - default is 1.0
-      pitch: 1.0, // optional - default is 1.0
+      speakRate: 1.5, // optional - default is 1.0
+      pitch: 1.2, // optional - default is 1.0
       volume: 1.0, // optional - default is 1.0
       locale: APP_CONSTANTS.LOCALE_IND_HINDI // optional - default is system locale,
     };
@@ -138,14 +164,7 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  /**
-  * This method will simply trash the message to hide on ui.
-  */
-  hideText() {
-    const timer = setTimeout(() => {
-      this.msgToSpeak = undefined;
-      clearTimeout(timer);
-    }, 1000);
-  }
+  onNavigatedFrom() {
 
+  }
 }

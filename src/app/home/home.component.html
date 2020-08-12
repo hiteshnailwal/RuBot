@@ -1,8 +1,14 @@
-<ActionBar class="action-bar">
-    <Label class="action-bar-title" [text]="appName"></Label>
-</ActionBar>
+<StackLayout orientation="vertical" class="homeScreenContainer">
+  <AbsoluteLayout width="100%">
+    <ActionBar class="action-bar">
+      <Label class="action-bar-title" [text]="appName"></Label>
+    </ActionBar>
 
-<GridLayout class="page">
-    <Label *ngIf="msgToSpeak" textWrap="true" [text]="msgToSpeak"></Label>
-    <button text="tapMe" (tap)="tap()"></button>
-</GridLayout>
+    <StackLayout class="contentArea">
+      <Label class="msgHeading" text="Your message will be here:"></Label>
+      <StackLayout id="content"></StackLayout>
+      <!-- <Label class="msgBody" textWrap="true" text="{{ msgToSpeak }}"></Label> -->
+      <!-- <button text="tapMe" (tap)="tap()"></button> -->
+    </StackLayout>
+  </AbsoluteLayout>
+</StackLayout>
