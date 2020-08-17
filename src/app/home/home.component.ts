@@ -22,8 +22,11 @@ export class HomeComponent implements OnInit {
   private _player: TNSPlayer;
   public appName: string;
   public msgToSpeak: string;
-  public flag: boolean;
 
+  /**
+   * 
+   * @param page 
+   */
   constructor (
     private page: Page,
   ) {
@@ -32,24 +35,37 @@ export class HomeComponent implements OnInit {
     this.page.on('navigatedFrom', this.onNavigatedFrom.bind(this));
   }
 
+  /**
+   * This is default angular lifecycle method when initializing the component.
+   */
   ngOnInit() {
     this.appName = APP_CONSTANTS.APP_NAME;
     this.msgToSpeak = '';
   }
 
+  /**
+   * This is default nativescript page method when page is initalized.
+   * This method check the message permission and then register the message receive events.
+   * if user deny the permission then an alert will be visible with basic permission info.
+   * everytime when message received the event will invoked and filterMsgLevel1 method will be called.
+   * 
+   * @param args is a page related object.
+   */
   onNavigatingTo(args: EventData) {
+    /** android text message receive permission for device */
     if (!this.smsReceivePermissionFlag) {
       permissions.requestPermissions([android.Manifest.permission.RECEIVE_SMS], APP_CONSTANTS.SMS_PERMISSION_TXT).then(() => {
         this.smsReceivePermissionFlag = true;
       }).catch(() => {
         this.smsReceivePermissionFlag = false;
-        this.showAlert();
+        this.showDenyMsgPermissionInfoAlert();
       });
     }
+    /** intent constant for getting message receive event */
     const smsReceiveIntent = android.provider.Telephony.Sms.Intents.SMS_RECEIVED_ACTION;
     application.android.registerBroadcastReceiver(smsReceiveIntent,
       (context: android.content.Context, intent: android.content.Intent) => { 
-      /** native android way to get the actual message and address */
+      /** native android way to get the actual message and address from intent */
       let messages: Object[];            
       messages = <any>intent.getSerializableExtra("pdus");
       const format: string = intent.getStringExtra("format");
@@ -57,33 +73,63 @@ export class HomeComponent implements OnInit {
         const message = android.telephony.SmsMessage.createFromPdu(messages[i], format);
         const msgFrom = message.getDisplayOriginatingAddress();
         const rawMsg = message.getMessageBody();
-        this.filterMessage(rawMsg, args);
+        /** calling other method to filter the text message */
+        this.filterMsgLevel1(rawMsg, args);
       }
     });
   }
 
-  filterMessage(rawMsg: string, args: EventData) {
+  /**
+   * This method filter the string with selected words and pass the string for next filter.
+   * 
+   * @param rawMsg is actual message passed by intent.
+   * @param args is a page related object.
+   */
+  filterMsgLevel1(rawMsg: string, args: EventData) {
     rawMsg = rawMsg.toLowerCase();
-    // first condition implemented
+    /** first condition implemented */
     if (rawMsg.search(APP_CONSTANTS.FILTER_WORD_1) !== -1 ||
     rawMsg.search(APP_CONSTANTS.FILTER_WORD_2) !== -1 || 
     rawMsg.search(APP_CONSTANTS.FILTER_WORD_3) !== -1 ||
     rawMsg.search(APP_CONSTANTS.FILTER_WORD_4) !== -1) {
-      // second condition implemented for rs
+      /** second condition implemented for rs */
       if (rawMsg.match(APP_CONSTANTS.RS_TXT) !== null) {
-        this.filterAmount(rawMsg, APP_CONSTANTS.RS_TXT).then((str) => {
-          this.goAhead(str, args);
+        this.filterMsgLevel2(rawMsg, APP_CONSTANTS.RS_TXT).then((str) => {
+          this.bindFilteredMsgWithUI(str, args);
         });
-        // second condition implemented for INR
+      /** second condition implemented for INR */
       } else if (rawMsg.match(APP_CONSTANTS.INR_TXT) !== null) {
-        this.filterAmount(rawMsg, APP_CONSTANTS.INR_TXT).then((str) => {
-          this.goAhead(str, args);
+        this.filterMsgLevel2(rawMsg, APP_CONSTANTS.INR_TXT).then((str) => {
+          this.bindFilteredMsgWithUI(str, args);
         });
       }
     }
   }
 
-  goAhead(str: string, args: EventData) {
+  /**
+   * this method filter the string and return the actual amount received by user as a promise.
+   * 
+   * @param str is level-1 filtered message.
+   * @param constTxt is filter word, based on this level-2 filtering will be initiated.
+   */
+  filterMsgLevel2(str: string, constTxt: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      str = str.split(constTxt)[1].replace(/,/g, '');
+      str = str.match(/^\d+|\d+\b|\d+(?=\w)/g)[0];
+      const msg = APP_CONSTANTS.MSG_SPEAK_1 +''+ str +''+ APP_CONSTANTS.MSG_SPEAK_2;
+      resolve(msg);
+    });
+  }
+
+  /**
+   * this method got the actual amount of money and based on it a string will be generated.
+   * a new label will be created with CSS property and all the stuff will be bind with UI.
+   * once all done, this method will invoke the ring audio method.
+   * 
+   * @param str is filtered message, basically the amount of money.
+   * @param args is a page related object.
+   */
+  bindFilteredMsgWithUI(str: string, args: EventData) {
     /** add message label binding start */
     const page = <Page>args.object;
     const msgContent = <StackLayout>page.getViewById("content");
@@ -100,8 +146,8 @@ export class HomeComponent implements OnInit {
     /** add message label binding end */
 
     /** calling audio player */
-    this.playAudio().then(() => {
-      this.startReading().then(() => {
+    this.playRingAudio().then(() => {
+      this.playMsgAudio().then(() => {
         /** removing message label binding */
         msgContent.removeChild(msgLabel);
         page.bindingContext = vm;
@@ -109,33 +155,10 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  showAlert() {
-    const requestObj = {
-      title: APP_CONSTANTS.APP_NAME,
-      message: APP_CONSTANTS.SMS_PERMISSION_DECLINE_MSG,
-      okButtonText: APP_CONSTANTS.GOT_IT_TXT
-    };
-    dialogs.prompt(requestObj);
-  }
-  
   /**
-   * 
-   * @param str 
-   * @param constTxt 
+   * this method start the ring audio and return ring complete call back.
    */
-  filterAmount(str: string, constTxt: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      str = str.split(constTxt)[1].replace(/,/g, '');
-      str = str.match(/^\d+|\d+\b|\d+(?=\w)/g)[0];
-      const msg = APP_CONSTANTS.MSG_SPEAK_1 +''+ str +''+ APP_CONSTANTS.MSG_SPEAK_2;
-      resolve(msg);
-    });
-  }
-
-  /**
-   * this method start the ring audio.
-   */
-  playAudio() {
+  playRingAudio() {
     const playerOptions = {
       audioFile: '~/assets/speak-audio-ring.mp3',
       loop: false,
@@ -148,9 +171,9 @@ export class HomeComponent implements OnInit {
   }
 
   /**
-   * this method start the modified message audio.
+   * this method start the modified message audio and return message complete call back.
    */
-  startReading() {
+  playMsgAudio() {
     let speakOptions: SpeakOptions = {
       text: this.msgToSpeak, /// *** required ***
       speakRate: 1.5, // optional - default is 1.0
@@ -164,7 +187,39 @@ export class HomeComponent implements OnInit {
     });
   }
 
+  /**
+   * This method invokes when user deny the read permission. The method simply provide the information
+   * to the user regarding message permission importance for this application.
+   */
+  showDenyMsgPermissionInfoAlert() {
+    const requestObj = {
+      title: APP_CONSTANTS.APP_NAME,
+      message: APP_CONSTANTS.SMS_PERMISSION_DECLINE_MSG,
+      okButtonText: APP_CONSTANTS.GOT_IT_TXT
+    };
+    /** nativescript dialog call */
+    dialogs.prompt(requestObj);
+  }
+
+  /**
+   * this method calls when user start to navigate in other page.
+   */
   onNavigatedFrom() {
 
+  }
+
+  tap() {
+    const msg = 'pay tm per 40 Rupye Prapt Hue.';
+    let speakOptions: SpeakOptions = {
+      text: msg, /// *** required ***
+      speakRate: 0.8, // optional - default is 1.0
+      pitch: 1, // optional - default is 1.0
+      volume: 1.0, // optional - default is 1.0
+      locale: APP_CONSTANTS.LOCALE_IND_HINDI // optional - default is system locale,
+    };
+    return new Promise((resolve, reject) => {
+      speakOptions.finishedCallback = resolve;
+      TTS.speak(speakOptions)
+    });
   }
 }
