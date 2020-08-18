@@ -35,6 +35,7 @@
     "@angular/router": "~8.2.0",
     "nativescript-angular": "~8.2.0",
     "nativescript-audio": "^5.1.1",
+    "nativescript-i18n": "^0.4.1",
     "nativescript-permissions": "^1.3.9",
     "nativescript-texttospeech": "^2.0.3",
     "nativescript-theme-core": "~1.0.6",

@@ -1,35 +1,45 @@
 .homeScreenContainer {
   width: 100%;
   height: 100%;
+  background: #fff;
 }
 .action-bar {
   background: #177bcc;
   color: #fff;
   font-weight: 700;
-  font-size: 24px;
+  font-size: 22px;
 }
 .contentArea {
   width: 90%;
-  height: 30%;
-  background: #ddd;
-  color: #177bcc;
-  margin: 5%;
+  height: 70%;
+  background: #177bcc;
+  color: #ffffff;
+  margin: 10% 5%;
   border-radius: 10;
   box-shadow: #177bcc;
+}
+.msgList {
+  width: 90%;
+  height: 50%;
+  background: #ddd;
+  color: #177bcc;
+  margin: 40% 0 0 5%;
+  border-radius: 10;
+  font-size: 12px;
 }
 .contentArea .msgHeading {
   width: 90%;
   margin: 2% auto;
-  color: #177bcc;
-  font-size: 26px;
+  color: #ffffff;
+  font-size: 22px;
   font-weight: 700;
   text-align: center;
   text-decoration: underline;
   text-shadow: #000000;
 }
-.contentArea .msgBody {
+.msgBody {
   width: 90%;
-  margin: 5% auto;
+  margin: 30px auto;
   font-size: 22px;
   font-weight: 500;
   line-height: 16px;

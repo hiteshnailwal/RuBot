@@ -5,10 +5,43 @@
     </ActionBar>
 
     <StackLayout class="contentArea">
-      <Label class="msgHeading" text="Your message will be here:"></Label>
-      <StackLayout id="content"></StackLayout>
+      <Label class="msgHeading" textWrap="true" text="Your message list is here:"></Label>
+      <ScrollView class="scrollContainer" width="100%" height="100%">
+        <StackLayout id="content">
+          <!-- <Label class="msgBody" textWrap="true" text="550 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="999 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="400 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="20 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="5000 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="90 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="550 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="999 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="400 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="20 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="5000 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="90 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="550 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="999 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="400 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="20 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="5000 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="90 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="550 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="999 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="400 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="20 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="5000 rupee received."></Label>
+          <Label class="msgBody" textWrap="true" text="90 rupee received."></Label> -->
+        </StackLayout>
+      </ScrollView>
       <!-- <Label class="msgBody" textWrap="true" text="{{ msgToSpeak }}"></Label> -->
       <!-- <button text="tapMe" (tap)="tap()"></button> -->
     </StackLayout>
+
+    <!-- <StackLayout class="msgList" *ngIf="displayMsgArr">
+      <StackLayout *ngFor="let msg of displayMsgArr" class="list-group-item">
+        <Label class="msgLabel" textWrap="true" [text]="msg"></Label>
+      </StackLayout>
+    </StackLayout> -->
   </AbsoluteLayout>
 </StackLayout>

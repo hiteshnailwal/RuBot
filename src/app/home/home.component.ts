@@ -22,6 +22,7 @@ export class HomeComponent implements OnInit {
   private _player: TNSPlayer;
   public appName: string;
   public msgToSpeak: string;
+  public displayMsgArr: [string]; 
 
   /**
    * 
@@ -41,6 +42,7 @@ export class HomeComponent implements OnInit {
   ngOnInit() {
     this.appName = APP_CONSTANTS.APP_NAME;
     this.msgToSpeak = '';
+    this.displayMsgArr = [''];
   }
 
   /**
@@ -94,13 +96,13 @@ export class HomeComponent implements OnInit {
     rawMsg.search(APP_CONSTANTS.FILTER_WORD_4) !== -1) {
       /** second condition implemented for rs */
       if (rawMsg.match(APP_CONSTANTS.RS_TXT) !== null) {
-        this.filterMsgLevel2(rawMsg, APP_CONSTANTS.RS_TXT).then((str) => {
-          this.bindFilteredMsgWithUI(str, args);
+        this.filterMsgLevel2(rawMsg, APP_CONSTANTS.RS_TXT).then((amount) => {
+          this.bindFilteredMsgWithUI(amount, args);
         });
       /** second condition implemented for INR */
       } else if (rawMsg.match(APP_CONSTANTS.INR_TXT) !== null) {
-        this.filterMsgLevel2(rawMsg, APP_CONSTANTS.INR_TXT).then((str) => {
-          this.bindFilteredMsgWithUI(str, args);
+        this.filterMsgLevel2(rawMsg, APP_CONSTANTS.INR_TXT).then((amount) => {
+          this.bindFilteredMsgWithUI(amount, args);
         });
       }
     }
@@ -115,9 +117,8 @@ export class HomeComponent implements OnInit {
   filterMsgLevel2(str: string, constTxt: string): Promise<string> {
     return new Promise((resolve, reject) => {
       str = str.split(constTxt)[1].replace(/,/g, '');
-      str = str.match(/^\d+|\d+\b|\d+(?=\w)/g)[0];
-      const msg = APP_CONSTANTS.MSG_SPEAK_1 +''+ str +''+ APP_CONSTANTS.MSG_SPEAK_2;
-      resolve(msg);
+      const amount = str.match(/^\d+|\d+\b|\d+(?=\w)/g)[0];
+      resolve(amount);
     });
   }
 
@@ -129,29 +130,32 @@ export class HomeComponent implements OnInit {
    * @param str is filtered message, basically the amount of money.
    * @param args is a page related object.
    */
-  bindFilteredMsgWithUI(str: string, args: EventData) {
+  bindFilteredMsgWithUI(amount: string, args: EventData) {
+    const audioMsg = APP_CONSTANTS.MSG_SPEAK_1 +''+ amount +''+ APP_CONSTANTS.MSG_SPEAK_2;
+    const displayMsg = amount +''+ APP_CONSTANTS.DISPLAY_MSG;
+    this.displayMsgArr.push(displayMsg);
     /** add message label binding start */
     const page = <Page>args.object;
     const msgContent = <StackLayout>page.getViewById("content");
     const vm = new Observable();
-    const msgLabel = new Label();
-    this.msgToSpeak = str;
-    msgLabel.text =  this.msgToSpeak;
-    msgLabel.textWrap = true;
-    msgLabel.className = 'msgBody';
+    /** removing existing html */
+    msgContent.removeChildren();
+    /** binding new html array */
+    for (let index: number = this.displayMsgArr.length; index > 0; index--) {
+      const msgLabel = new Label();
+      msgLabel.text =  this.displayMsgArr[index];
+      msgLabel.textWrap = true;
+      msgLabel.className = 'msgBody';
+      msgContent.addChild(msgLabel);
+    }
     const pageCSS = APP_CONSTANTS.MSG_BLOCK_CSS;
     page.css = pageCSS;
-    msgContent.addChild(msgLabel);
     page.bindingContext = vm;
     /** add message label binding end */
 
     /** calling audio player */
     this.playRingAudio().then(() => {
-      this.playMsgAudio().then(() => {
-        /** removing message label binding */
-        msgContent.removeChild(msgLabel);
-        page.bindingContext = vm;
-      });
+      this.playMsgAudio(audioMsg);
     });
   }
 
@@ -173,11 +177,11 @@ export class HomeComponent implements OnInit {
   /**
    * this method start the modified message audio and return message complete call back.
    */
-  playMsgAudio() {
+  playMsgAudio(audioMsg: string) {
     let speakOptions: SpeakOptions = {
-      text: this.msgToSpeak, /// *** required ***
-      speakRate: 1.5, // optional - default is 1.0
-      pitch: 1.2, // optional - default is 1.0
+      text: audioMsg, /// *** required ***
+      speakRate: 0.9, // optional - default is 1.0
+      pitch: 1.0, // optional - default is 1.0
       volume: 1.0, // optional - default is 1.0
       locale: APP_CONSTANTS.LOCALE_IND_HINDI // optional - default is system locale,
     };
@@ -205,21 +209,20 @@ export class HomeComponent implements OnInit {
    * this method calls when user start to navigate in other page.
    */
   onNavigatedFrom() {
-
   }
 
-  tap() {
-    const msg = 'pay tm per 40 Rupye Prapt Hue.';
-    let speakOptions: SpeakOptions = {
-      text: msg, /// *** required ***
-      speakRate: 0.8, // optional - default is 1.0
-      pitch: 1, // optional - default is 1.0
-      volume: 1.0, // optional - default is 1.0
-      locale: APP_CONSTANTS.LOCALE_IND_HINDI // optional - default is system locale,
-    };
-    return new Promise((resolve, reject) => {
-      speakOptions.finishedCallback = resolve;
-      TTS.speak(speakOptions)
-    });
-  }
+  // tap() {
+  //   const msg = 'pay tm per 40 Rupye Prapt Hue.';
+  //   let speakOptions: SpeakOptions = {
+  //     text: msg, /// *** required ***
+  //     speakRate: 0.8, // optional - default is 1.0
+  //     pitch: 1, // optional - default is 1.0
+  //     volume: 1.0, // optional - default is 1.0
+  //     locale: APP_CONSTANTS.LOCALE_IND_HINDI // optional - default is system locale,
+  //   };
+  //   return new Promise((resolve, reject) => {
+  //     speakOptions.finishedCallback = resolve;
+  //     TTS.speak(speakOptions)
+  //   });
+  // }
 }
